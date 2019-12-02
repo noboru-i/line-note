@@ -2,7 +2,8 @@ const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
 
-const querystring = require('querystring');
+const querystring = require('querystring')
+const request = require('request')
 
 express()
   .use(express.static(path.join(__dirname, 'public')))
@@ -21,6 +22,22 @@ express()
     res.redirect(301, 'https://access.line.me/oauth2/v2.1/authorize?' + query)
   })
   .get('/callback', (req, res) => {
-    res.send('code: ' + req.query.code)
+    request
+      .post({
+        url: `https://api.line.me/oauth2/v2.1/token`,
+        form: {
+          grant_type: "authorization_code",
+          code: req.query.code,
+          redirect_uri: 'https://line-note.herokuapp.com/callback',
+          client_id: process.env.LINECORP_PLATFORM_CHANNEL_CHANNELID,
+          client_secret: process.env.LINECORP_PLATFORM_CHANNEL_CHANNELSECRET,
+        }
+      }, (error, response, body) => {
+        if (response.statusCode != 200){
+          res.send(error)
+          return
+        }
+        res.send(body)
+      })
   })
   .listen(PORT, () => console.log(`Listening on ${ PORT }`))
