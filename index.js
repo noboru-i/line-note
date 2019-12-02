@@ -33,11 +33,23 @@ express()
           client_secret: process.env.LINECORP_PLATFORM_CHANNEL_CHANNELSECRET,
         }
       }, (error, response, body) => {
-        if (response.statusCode != 200){
+        if (response.statusCode != 200) {
           res.send(error)
           return
         }
-        res.send(body)
+        request
+          .get({
+            url: 'https://api.line.me/v2/profile',
+            headers: {
+              'Authorization': 'Bearer ' + JSON.parse(body).access_token
+            }
+          }, (error, response, body) => {
+            if (response.statusCode != 200) {
+              res.send(error)
+              return
+            }
+            res.send(body)
+          })
       })
   })
   .listen(PORT, () => console.log(`Listening on ${ PORT }`))
